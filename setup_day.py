@@ -2,7 +2,7 @@ import os
 import secrets
 
 day = int(input("Enter day: "))
-cookie = "***REMOVED***"
+cookie = open('session.txt').read()
 folder = f"day_{day}"
 
 while os.path.isdir(folder):
