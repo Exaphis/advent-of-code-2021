@@ -14,16 +14,15 @@ def calc_population(fish: list[int], days: int) -> int:
         pop[n] += 1
 
     for _ in range(days):
-        new_dict = defaultdict(int)
+        new_pop = defaultdict(int)
         for k, v in pop.items():
-            new_dict[k - 1] = v
+            new_pop[k - 1] = v
 
-        if -1 in new_dict:
-            new_dict[8] = new_dict[-1]
-            new_dict[6] += new_dict[-1]
-            new_dict[-1] = 0
+        new_pop[8] = new_pop[-1]
+        new_pop[6] += new_pop[-1]
+        new_pop[-1] = 0
 
-        pop = new_dict
+        pop = new_pop
 
     return sum(pop.values())
 
