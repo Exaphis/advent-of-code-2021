@@ -20,66 +20,54 @@ def part1(data: str):
 
 def part2(data: str):
     ret = 0
+
     for line in data.splitlines():
-        signals_s, output = line.split(" | ")
-        signals = signals_s.split()
-        wire_map = {}
-        num_map = {}
+        wires_list_s, output = line.split(" | ")
+        wires_list = ["".join(sorted(wires)) for wires in wires_list_s.split()]
+        wires_map = [""] * 10
 
-        for wires in signals:
-            if len(wires) == 2:
-                wire_map[wires] = 1
-                num_map[1] = wires
-            elif len(wires) == 3:
-                wire_map[wires] = 7
-                num_map[7] = wires
-            elif len(wires) == 4:
-                wire_map[wires] = 4
-                num_map[4] = wires
-            elif len(wires) == 7:
-                wire_map[wires] = 8
-                num_map[8] = wires
+        # find known numbers using the number of wires
+        len_num_map = {2: 1, 3: 7, 4: 4, 7: 8}
+        for wires in wires_list:
+            if len(wires) in len_num_map:
+                wires_map[len_num_map[len(wires)]] = wires
 
-        for wires in signals:
-            if wires in wire_map:
+        # find all unknown numbers by checking which wires are in common with known
+        # wires as well as using its number of wires
+        for wires in wires_list:
+            if wires in wires_map:
                 continue
+
             c = set(wires)
 
-            if len(c & set(num_map[1])) == 1:
+            if len(c & set(wires_map[1])) == 1:
                 # 2, 5, or 6
-                if len(c & set(num_map[4])) == 2:
-                    wire_map[wires] = 2
-                    num_map[2] = wires
+                if len(c & set(wires_map[4])) == 2:
+                    wires_map[2] = wires
                 else:
                     # 5 or 6
                     if len(c) == 5:
-                        wire_map[wires] = 5
-                        num_map[5] = wires
+                        wires_map[5] = wires
                     else:
                         assert len(c) == 6
-                        wire_map[wires] = 6
-                        num_map[6] = wires
+                        wires_map[6] = wires
             else:
                 # 0, 3, or 9
                 if len(c) == 5:
-                    wire_map[wires] = 3
-                    num_map[3] = wires
+                    wires_map[3] = wires
                 else:
-                    if len(c & set(num_map[4])) == 4:
-                        wire_map[wires] = 9
-                        num_map[9] = wires
+                    if len(c & set(wires_map[4])) == 4:
+                        wires_map[9] = wires
                     else:
-                        wire_map[wires] = 0
-                        num_map[0] = wires
+                        wires_map[0] = wires
 
-        # ic(wire_map)
-        # ic(num_map)
+        assert not any(not wire for wire in wires_map)
 
-        m_map = {frozenset(wires): wire_map[wires] for wires in wire_map}
         num = ""
         for wires in output.split():
-            num += str(m_map[frozenset(wires)])
-        ic(num)
+            wires = "".join(sorted(wires))
+            num += str(wires_map.index(wires))
+        # ic(num)
         ret += int(num)
     return ret
 
