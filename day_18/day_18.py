@@ -3,7 +3,7 @@ import os
 from icecream import ic
 from math import ceil
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 local_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(local_dir, ".."))
@@ -20,37 +20,46 @@ class Node:
         return self.val is not None
 
     def is_pair(self):
-        return self.val is None
+        return self.left is not None and self.right is not None
 
 
-def simplify_nums(root) -> bool:
+def simplify_nums(root: Node) -> bool:
     visit = [root]
     while visit:
         curr = visit.pop()
-        if curr.is_number() and curr.val >= 10:
-            curr.left = Node(curr.val // 2)
-            curr.right = Node(ceil(curr.val / 2))
-            curr.val = None
-            return True
-
-        if curr.is_pair():
-            visit.append(curr.right)
-            visit.append(curr.left)
+        if curr.is_number():
+            val = cast(int, curr.val)
+            if val >= 10:
+                curr.val = None
+                curr.left = Node(val // 2)
+                curr.right = Node(ceil(val / 2))
+                return True
+        elif curr.is_pair():
+            visit.append(cast(Node, curr.right))
+            visit.append(cast(Node, curr.left))
+        else:
+            assert False
 
     return False
 
 
-def simplify_pairs(root) -> bool:
+def simplify_pairs(root: Node) -> bool:
     visit = [(0, root)]
-    prev_num = None
-    to_add = None
+    prev_num: Optional[Node] = None
+    to_add: Optional[int] = None
 
     while visit:
         depth, curr = visit.pop()
 
         if to_add is None:
             if depth == 4 and curr.is_pair():
+                curr.left = cast(Node, curr.left)
+                curr.right = cast(Node, curr.right)
+                assert curr.left.val is not None
+                assert curr.right.val is not None
+
                 if prev_num is not None:
+                    assert prev_num.val is not None
                     prev_num.val += curr.left.val
 
                 to_add = curr.right.val
@@ -62,13 +71,13 @@ def simplify_pairs(root) -> bool:
             elif curr.is_number():
                 prev_num = curr
         else:
-            if curr.is_number():
+            if curr.val is not None:
                 curr.val += to_add
                 return True
 
         if curr.is_pair():
-            visit.append((depth + 1, curr.right))
-            visit.append((depth + 1, curr.left))
+            visit.append((depth + 1, cast(Node, curr.right)))
+            visit.append((depth + 1, cast(Node, curr.left)))
 
     if to_add is not None:
         return True
@@ -76,40 +85,44 @@ def simplify_pairs(root) -> bool:
     return False
 
 
-def reduce(root):
+def reduce(root: Node):
     while True:
         if not simplify_pairs(root):
             if not simplify_nums(root):
                 break
 
 
-def to_tree(l):
+def to_tree(l) -> Node:
     if isinstance(l, int):
         return Node(l)
     else:
         left = to_tree(l[0])
         right = to_tree(l[1])
-        return Node(None, left, right)
+        return Node(left=left, right=right)
 
 
-def mag(t):
-    if t.val is None:
+def mag(t: Node) -> int:
+    if t.left is not None and t.right is not None:
         return 3 * mag(t.left) + 2 * mag(t.right)
-    return t.val
+    elif t.val is not None:
+        return t.val
+
+    assert False
 
 
 def part1(data: str):
-    c = None
+    c: Optional[Node] = None
     for line in data.splitlines():
         t = to_tree(eval(line))
         if c is None:
             c = t
         else:
-            c = Node(None, c, t)
+            c = Node(left=c, right=t)
 
         reduce(c)
 
-    return mag(c)
+    if c is not None:
+        return mag(c)
 
 
 def part2(data: str):
@@ -118,7 +131,7 @@ def part2(data: str):
         for line2 in data.splitlines():
             t1 = to_tree(eval(line1))
             t2 = to_tree(eval(line2))
-            c = Node(None, t1, t2)
+            c = Node(left=t1, right=t2)
             reduce(c)
             best = max(best, mag(c))
 
