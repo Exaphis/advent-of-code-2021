@@ -1,22 +1,25 @@
 import sys
 import os
+from typing import Generator
 from icecream import ic
 
 local_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(local_dir, ".."))
 from aoc import run
 
+P = tuple[int, int]
 
-def get_neighbors(r, c):
+
+def get_neighbors(r: int, c: int) -> Generator[P, None, None]:
     for dr in range(-1, 2):
         for dc in range(-1, 2):
             yield r + dr, c + dc
 
 
-def enhance(pts, algo, off_in_pts):
+def enhance(pts: set[P], algo: str, off_in_pts: bool) -> tuple[bool, set[P]]:
     new_pts = set()
 
-    consider = set()
+    consider: set[P] = set()
     for i, j in pts:
         consider.update(get_neighbors(i, j))
 
@@ -47,7 +50,7 @@ def enhance(pts, algo, off_in_pts):
     return off_in_pts, new_pts
 
 
-def print_pts(pts):
+def print_pts(pts: set[P]) -> None:
     min_row = min(r for r, _ in pts)
     min_col = min(c for _, c in pts)
     rows = max(r for r, _ in pts) - min_row
